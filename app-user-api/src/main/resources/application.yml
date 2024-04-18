@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: Bootcamp Sysmap 2024 - Douglas Campos
+
+server:
+    port: 3030
+    servelet:
+        context-path: /api
