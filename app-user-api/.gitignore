@@ -42,3 +42,6 @@ build/
 /.idea/
 ### VS Code ###
 .vscode/
+/.mvn/
+/mvnw
+/mvnw.cmd
