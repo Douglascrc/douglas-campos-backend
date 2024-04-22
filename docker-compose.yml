@@ -19,14 +19,14 @@ services:
     container_name: postgres_bootcamp
     networks:
       - backend
-  app-user-api:
+  app-user-api2:
     build:
       context: ../douglas-campos-backend/app-user-api
       dockerfile: ../app-user-api/Dockerfile
-    image: douglasrcampos/app-user-api:latest
+    image: douglasrcampos/app-user-api2:latest
     ports:
-      - 3030:3030
-    container_name: app-user-api
+      - 8081:8081
+    container_name: app-user-api2
     environment:
       - RABBIT_HOST=rabbitmq_bootcamp
       - POSTGRES_URL=postgres_bootcamp
