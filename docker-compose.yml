@@ -1,0 +1,42 @@
+version: '3.7'
+services:
+  rabbitmq_bootcamp:
+    build:
+      context: ./rabbitmq
+    image: douglasrcampos/rabbitmq1_bootcamp:latest
+    ports:
+      - 15672:15672
+      - 5672:5672
+    container_name: rabbitmq_bootcamp
+    networks:
+      - backend
+  postgres_bootcamp:
+    build:
+      context: ./postgres
+    image: douglasrcampos/postgres_bootcamp:latest
+    ports:
+      - 5432:5432
+    container_name: postgres_bootcamp
+    networks:
+      - backend
+  app-user-api:
+    build:
+      context: ../douglas-campos-backend/app-user-api
+      dockerfile: ../app-user-api/Dockerfile
+    image: douglasrcampos/app-user-api:latest
+    ports:
+      - 3030:3030
+    container_name: app-user-api
+    environment:
+      - RABBIT_HOST=rabbitmq_bootcamp
+      - POSTGRES_URL=postgres_bootcamp
+      - POSTGRES_USER=bootcamp
+      - POSTGRES_PASSWORD=bootcamppass
+      - POSTGRES_DATABASE=bootcamp
+    depends_on:
+      - postgres_bootcamp
+    networks:
+      - backend
+networks:
+  backend:
+    driver: "bridge"
