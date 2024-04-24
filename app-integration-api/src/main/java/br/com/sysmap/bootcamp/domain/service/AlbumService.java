@@ -48,7 +48,7 @@ public class AlbumService {
         album.setUsers(getUser());
         Album albumSaved = albumRepository.save(album);
 
-        WalletDto walletDto = new WalletDto(albumSaved.getUsers().getEmail(), albumSaved.getValue());
+        WalletDto walletDto = new WalletDto(albumSaved.getUsers().getEmail(), albumSaved.getPrice());
         this.template.convertAndSend(queue.getName(), walletDto);
 
         return albumSaved;

@@ -8,9 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,6 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table(name = "WALLET")
 public class Wallet {
 
@@ -41,4 +40,8 @@ public class Wallet {
     private Users users;
 
 
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+        this.lastUpdate = LocalDateTime.now();
+    }
 }

@@ -3,6 +3,7 @@ package br.com.sysmap.bootcamp.domain.service;
 
 
 import br.com.sysmap.bootcamp.domain.entities.Users;
+import br.com.sysmap.bootcamp.domain.entities.Wallet;
 import br.com.sysmap.bootcamp.domain.repository.UsersRepository;
 import br.com.sysmap.bootcamp.dto.AuthDto;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -40,13 +43,23 @@ public class UsersService implements UserDetailsService {
 
         user = user.toBuilder().password(this.passwordEncoder.encode(user.getPassword())).build();
 
-
         // Aqui deve se criar uma wallet para o user
+        Wallet wallet = Wallet.builder().balance(BigDecimal.ZERO).users(user).build();
+        wallet.setPoints(0L);
 
         log.info("Saving user: {}", user);
         return this.usersRepository.save(user);
     }
 
+    public Users update(Users user) {
+
+        Users existingUser = usersRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        existingUser.setName(user.getName());
+        existingUser.setEmail(user.getEmail());
+
+        return usersRepository.save(existingUser);
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -74,5 +87,11 @@ public class UsersService implements UserDetailsService {
         ).id(users.getId()).build();
     }
 
+    public Users findById(Long id) {
+        return this.usersRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+    }
 
+    public List<Users> listAll() {
+        return this.usersRepository.findAll();
+    }
 }
