@@ -34,10 +34,6 @@ public class AlbumService {
     private final UsersService usersService;
 
 
-    public void teste() {
-
-    }
-
     public List<AlbumModel> getAlbums(String search) throws IOException, ParseException, SpotifyWebApiException {
         return this.spotifyApi.getAlbums(search);
     }
@@ -48,7 +44,7 @@ public class AlbumService {
         album.setUsers(getUser());
         Album albumSaved = albumRepository.save(album);
 
-        WalletDto walletDto = new WalletDto(albumSaved.getUsers().getEmail(), albumSaved.getPrice());
+        WalletDto walletDto = new WalletDto(albumSaved.getUsers().getEmail(), albumSaved.getValue());
         this.template.convertAndSend(queue.getName(), walletDto);
 
         return albumSaved;

@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class IntegrationDouglasCampos {
+public class ApiIntegrationDouglasCampos {
 
 	public static void main(String[] args) {
-		SpringApplication.run(IntegrationDouglasCampos.class, args);
+		SpringApplication.run(ApiIntegrationDouglasCampos.class, args);
 	}
 
 }

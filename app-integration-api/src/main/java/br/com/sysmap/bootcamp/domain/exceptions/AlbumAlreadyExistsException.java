@@ -1,7 +1,7 @@
 package br.com.sysmap.bootcamp.domain.exceptions;
 
-public class AlbumAlraedyExistsException extends RuntimeException
-    public AlbumAlraedyExistsException(String message) {
+public class AlbumAlreadyExistsException extends RuntimeException {
+    public AlbumAlreadyExistsException(String message) {
         super(message);
     }
 }

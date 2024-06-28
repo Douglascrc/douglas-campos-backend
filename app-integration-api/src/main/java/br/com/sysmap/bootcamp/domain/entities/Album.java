@@ -31,8 +31,8 @@ public class Album {
     @Column(name = "IMAGE_URL", nullable = false, length = 150)
     private String imageUrl;
 
-    @Column(name = "PRICE", nullable = false)
-    private BigDecimal price;
+    @Column(name = "VALUE", nullable = false)
+    private BigDecimal value;
 
     @ManyToOne
     @JoinColumn(name = "ID_USER")
