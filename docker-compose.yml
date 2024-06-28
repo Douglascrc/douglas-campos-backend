@@ -10,13 +10,13 @@ services:
     container_name: rabbitmq_bootcamp
     networks:
       - backend
-  postgres_bootcamp2:
+  postgres_backend:
     build:
       context: ./postgres
-    image: douglasrcampos/postgres_bootcamp2:latest
+    image: douglasrcampos/postgres_bootcamp:latest
     ports:
       - 5432:5432
-    container_name: postgres_bootcamp2
+    container_name: postgres_backend
     networks:
       - backend
   app-user-api:
@@ -34,7 +34,7 @@ services:
       - POSTGRES_PASSWORD=bootcamppass
       - POSTGRES_DATABASE=bootcamp
     depends_on:
-      - postgres_bootcamp2
+      - postgres_backend
     networks:
       - backend
   app-integration-api:
@@ -47,12 +47,12 @@ services:
     container_name: app-integration-api
     environment:
       - RABBIT_HOST=rabbitmq_bootcamp
-      - POSTGRES_URL=postgres_bootcamp2
+      - POSTGRES_URL=postgres_bootcamp
       - POSTGRES_USER=bootcamp
       - POSTGRES_PASSWORD=bootcamppass
       - POSTGRES_DATABASE=bootcamp
     depends_on:
-      - postgres_bootcamp2
+      - postgres_backend
     networks:
       - backend
 networks:
