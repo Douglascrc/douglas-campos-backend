@@ -15,16 +15,30 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class ServerSecurityConfig {
-    
+
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
+
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+//        return httpSecurity.csrf(AbstractHttpConfigurer::disable)
+//                .authorizeHttpRequests(authorize->authorize.requestMatchers("*").permitAll())
+//                .authorizeHttpRequests(authorize->authorize.anyRequest().authenticated())
+//                .httpBasic(Customizer.withDefaults())
+//                .build();
+//    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorize->authorize.requestMatchers("/users/auth", "/users/save", "/api/auth/**",
+                .authorizeHttpRequests(authorize->authorize.requestMatchers(
+                        "/users/auth", "/users/create", "/api/auth/**",
+                        "albums/remove/{id}",
+                        "albums/all",
+                        "albums/sale",
                         "/v3/api-docs/**",
                         "/v2/api-docs.yaml",
                         "/swagger-ui/**", "/swagger-ui.html").permitAll())
@@ -32,7 +46,6 @@ public class ServerSecurityConfig {
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
