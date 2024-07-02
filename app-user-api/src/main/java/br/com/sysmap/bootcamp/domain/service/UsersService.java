@@ -1,18 +1,21 @@
-
 package br.com.sysmap.bootcamp.domain.service;
 
 
 import br.com.sysmap.bootcamp.domain.entities.Users;
 import br.com.sysmap.bootcamp.domain.entities.Wallet;
 import br.com.sysmap.bootcamp.domain.repository.UsersRepository;
-import br.com.sysmap.bootcamp.dto.AuthDto;
+import br.com.sysmap.bootcamp.dto.*;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -21,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -32,66 +35,86 @@ public class UsersService implements UserDetailsService {
     private final UsersRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional(propagation = Propagation.REQUIRED)
+    public ResponseUserDto create(UserRequestDto userDto, @Autowired WalletService walletService) {
+        Optional<Users> usersOptional = usersRepository.findByEmail(userDto.getEmail());
+        if (usersOptional.isPresent()) {
+            throw new NoSuchElementException("email already registered");
+        }
+        Users userEntity = usersRepository.save(Users.builder().name(userDto.getEmail())
+                .password(passwordEncoder.encode(userDto.getPassword())).email(userDto.getEmail()).build());
+        log.info("Saving user: {}",userEntity );
+        Wallet wallet = walletService.saveWallet(Wallet.builder().balance(BigDecimal.valueOf(100)).points(0L).users(userEntity).build());
+        log.info("Creating wallet: {}",wallet);
+        return new ResponseUserDto(userEntity);
+    }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public Users save(Users user) {
-
-        Optional<Users> usersOptional = this.usersRepository.findByEmail(user.getEmail());
-        if (usersOptional.isPresent()) {
-            throw new RuntimeException("User already exists");
+    public ResponseUserDto update(UserUpdateRequestDto userDto) {
+        Users userEntity = usersRepository.findById(userDto.getId())
+                .orElseThrow(()-> new EntityNotFoundException("User with id " + userDto.getId() + " not found"));
+        if(!isEmailAlreadyRegistered(userEntity,userDto)){
+            log.info("Updating user: {}", userEntity);
+            copyDtoToEntity(userEntity,userDto);
         }
-
-        user = user.toBuilder().password(this.passwordEncoder.encode(user.getPassword())).build();
-
-        // Aqui deve se criar uma wallet para o user
-        Wallet wallet = Wallet.builder().balance(BigDecimal.ZERO).users(user).build();
-        wallet.setPoints(0L);
-
-        log.info("Saving user: {}", user);
-        return this.usersRepository.save(user);
+        return new ResponseUserDto(usersRepository.save(userEntity));
     }
+    public ResponseAuthDto auth(RequestAuthDto requestAuthDto) {
+        Users users = this.findByEmail(requestAuthDto.getEmail());
 
-    public Users update(Users user) {
-
-        Users existingUser = usersRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        existingUser.setName(user.getName());
-        existingUser.setEmail(user.getEmail());
-
-        return usersRepository.save(existingUser);
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<Users> usersOptional = this.usersRepository.findByEmail(username);
-
-        return usersOptional.map(users -> new User(users.getEmail(), users.getPassword(), new ArrayList<GrantedAuthority>()))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found" + username));
-    }
-
-    public Users findByEmail(String email) {
-        return this.usersRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    public AuthDto auth(AuthDto authDto) {
-        Users users = this.findByEmail(authDto.getEmail());
-
-        if (!this.passwordEncoder.matches(authDto.getPassword(), users.getPassword())) {
-            throw new RuntimeException("Invalid password");
+        if (!this.passwordEncoder.matches(requestAuthDto.getPassword(), users.getPassword())) {
+            throw new NoSuchElementException("Invalid password");
         }
+        log.info("Authenticating user: {}",users );
+        String password = users.getEmail().concat(":").concat(users.getPassword());
 
-        StringBuilder password = new StringBuilder().append(users.getEmail()).append(":").append(users.getPassword());
-
-        return AuthDto.builder().email(users.getEmail()).token(
-                Base64.getEncoder().withoutPadding().encodeToString(password.toString().getBytes())
+        return ResponseAuthDto.builder().email(users.getEmail()).token(
+                Base64.getEncoder().withoutPadding().encodeToString(password.getBytes())
         ).id(users.getId()).build();
     }
 
-    public Users findById(Long id) {
-        return this.usersRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+    public Page<ResponseUserDto> findAll(Pageable pg) {
+        log.info("Getting all users");
+        return (usersRepository.findAll(pg).map(ResponseUserDto::new));
     }
 
-    public List<Users> listAll() {
-        return this.usersRepository.findAll();
+    public ResponseUserDto findById(Long id) {
+        return new ResponseUserDto(usersRepository.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException("User not found")));
+    }
+
+    private boolean isEmailAlreadyRegistered(Users existentUser, UserUpdateRequestDto userDto){
+        Optional<Users> usersOptional = usersRepository.findByEmail(userDto.getEmail());
+        if(usersOptional.isPresent()){
+            if(!usersOptional.get().getId().equals(existentUser.getId()))
+                throw new NoSuchElementException("User with email " + userDto.getEmail() + " already exists");
+        }
+        return false;
+    }
+
+    public Users getLoggedUser() {
+        String loggedUserName = (String)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return this.usersRepository.findByEmail(loggedUserName).orElseThrow(()->new EntityNotFoundException("user not found"));
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) {
+        Users user = usersRepository.findByEmail(username).orElseThrow(()->new NoSuchElementException("User not found"));
+        return new User(user.getEmail(), user.getPassword(), new ArrayList<GrantedAuthority>());
+    }
+
+    public Users findByEmail(String email) {
+        return usersRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("User not found "+email));
+    }
+
+    private void copyDtoToEntity(Users userEntity,UserUpdateRequestDto userDto){
+        //validation
+        log.info("Validating userDto: {}",userDto );
+        if(userDto.getName()!=null&&!userDto.getName().isBlank())
+            userEntity.setName(userDto.getName());
+        if(userDto.getEmail()!=null&&!userDto.getEmail().isBlank())
+            userEntity.setEmail(userDto.getEmail());
+        if(userDto.getPassword()!=null&&!userDto.getPassword().isBlank())
+            userEntity.setPassword(passwordEncoder.encode(userDto.getPassword()));
     }
 }
