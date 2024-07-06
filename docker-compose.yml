@@ -3,20 +3,20 @@ services:
   rabbitmq_bootcamp:
     build:
       context: ./rabbitmq
-    image: douglasrcampos/rabbitmq1_bootcamp:latest
+    image: douglasrcampos/rabbitmq_bootcamp:latest
     ports:
       - 15672:15672
       - 5672:5672
     container_name: rabbitmq_bootcamp
     networks:
       - backend
-  postgres_backend:
+  postgres_bootcamp:
     build:
       context: ./postgres
     image: douglasrcampos/postgres_bootcamp:latest
     ports:
       - 5432:5432
-    container_name: postgres_backend
+    container_name: postgres_bootcamp
     networks:
       - backend
   app-user-api:
@@ -24,6 +24,7 @@ services:
       context: ../douglas-campos-backend/app-user-api
       dockerfile: ../app-user-api/Dockerfile
     image: douglasrcampos/app-user-api:latest
+    command: ["--debug"]
     ports:
       - 8081:8081
     container_name: app-user-api
@@ -34,7 +35,7 @@ services:
       - POSTGRES_PASSWORD=bootcamppass
       - POSTGRES_DATABASE=bootcamp
     depends_on:
-      - postgres_backend
+      - postgres_bootcamp
     networks:
       - backend
   app-integration-api:
@@ -49,12 +50,16 @@ services:
       - RABBIT_HOST=rabbitmq_bootcamp
       - POSTGRES_URL=postgres_bootcamp
       - POSTGRES_USER=bootcamp
-      - POSTGRES_PASSWORD=bootcamppass
+      - POSTGRES_PASSWORD=bootcampass
       - POSTGRES_DATABASE=bootcamp
+      - CLIENT_ID = 00a5fc853d8949cd8f56e5fca2a77556
+      - CLIENT_SECRET = 62bbeeb6dc1b4907a8b1504fb8515793
     depends_on:
-      - postgres_backend
+      - postgres_bootcamp
     networks:
       - backend
 networks:
   backend:
     driver: "bridge"
+
+
