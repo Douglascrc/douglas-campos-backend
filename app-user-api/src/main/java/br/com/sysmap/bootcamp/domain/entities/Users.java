@@ -12,7 +12,7 @@ import lombok.*;
 @Setter
 @Getter
 @Builder(toBuilder = true)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "USERS")
@@ -23,13 +23,13 @@ public class Users {
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
-    @Column( name = "name" )
+    @Column( name = "name", nullable = false )
     private String name;
 
-    @Column( name = "email")
+    @Column( name = "email", nullable = false)
     private String email;
 
-    @Column( name = "password")
+    @Column( name = "password",nullable = false)
     private String password;
 
 }
