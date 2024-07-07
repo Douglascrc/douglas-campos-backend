@@ -1,5 +1,7 @@
 package br.com.sysmap.bootcamp.config;
 
+import br.com.sysmap.bootcamp.config.exception.SecurityExceptionHandler;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,38 +16,29 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@AllArgsConstructor
 public class ServerSecurityConfig {
+
+    private SecurityExceptionHandler securityExceptionHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-
         return new BCryptPasswordEncoder();
     }
-
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-//        return httpSecurity.csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests(authorize->authorize.requestMatchers("*").permitAll())
-//                .authorizeHttpRequests(authorize->authorize.anyRequest().authenticated())
-//                .httpBasic(Customizer.withDefaults())
-//                .build();
-//    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorize->authorize.requestMatchers(
-                        "/users/auth", "/users/create", "/api/auth/**",
-                        "albums/remove/{id}",
-                        "albums/all",
-                        "albums/sale",
+                .authorizeHttpRequests(authorize->authorize.requestMatchers("/albums/all/**",
                         "/v3/api-docs/**",
                         "/v2/api-docs.yaml",
                         "/swagger-ui/**", "/swagger-ui.html").permitAll())
                 .authorizeHttpRequests(authorize->authorize.anyRequest().authenticated())
+                .exceptionHandling(t->t.authenticationEntryPoint(securityExceptionHandler))
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
