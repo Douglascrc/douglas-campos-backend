@@ -1,93 +1,68 @@
 package br.com.sysmap.bootcamp.domain.service;
 
+import br.com.sysmap.bootcamp.dto.WalletOperationDto;
+import br.com.sysmap.bootcamp.util.DateProvider;
 import br.com.sysmap.bootcamp.domain.entities.Users;
 import br.com.sysmap.bootcamp.domain.entities.Wallet;
 import br.com.sysmap.bootcamp.domain.repository.WalletRepository;
-import br.com.sysmap.bootcamp.dto.WalletDto;
+import br.com.sysmap.bootcamp.dto.ResponseWalletDto;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.NoSuchElementException;
-
 
 @RequiredArgsConstructor
 @Service
+@Log4j2
 public class WalletService {
 
     private final UsersService usersService;
     private final WalletRepository walletRepository;
+    private final DateProvider dateProvider;
 
-    public void debit(WalletDto walletDto) {
-        Users users = usersService.findByEmail(walletDto.getEmail());
-        Wallet wallet = walletRepository.findByUsers(users).orElseThrow(() -> new NoSuchElementException("Wallet not found for user"));
-        wallet.setBalance(wallet.getBalance().subtract(walletDto.getValue()));
-
-//      wallet.setPoints(); Aqui deve se implementar o desafio de pontos
-        addPointsBasedOnDay(wallet);
-        walletRepository.save(wallet);
-
-    }
-    public void addPointsBasedOnDay(Wallet wallet) {
-        int pointsToAdd;
-        DayOfWeek dayOfWeek = LocalDate.now().getDayOfWeek();
-
-        switch (dayOfWeek) {
-            case SUNDAY:
-                pointsToAdd = 25;
-                break;
-            case MONDAY:
-                pointsToAdd = 7;
-                break;
-            case TUESDAY:
-                pointsToAdd = 6;
-                break;
-            case WEDNESDAY:
-                pointsToAdd = 2;
-                break;
-            case THURSDAY:
-                pointsToAdd = 10;
-                break;
-            case FRIDAY:
-                pointsToAdd = 15;
-                break;
-            case SATURDAY:
-                pointsToAdd = 20;
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + dayOfWeek);
-        }
-
-        wallet.setPoints(wallet.getPoints() + pointsToAdd);
-    }
-
-    public Wallet credit(BigDecimal creditAmount) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Users users = usersService.findByEmail(authentication.getName());
-
-        Wallet wallet = walletRepository.findByUsers(users).orElseThrow(() -> new NoSuchElementException("Wallet not found for user"));
-        wallet.setBalance(wallet.getBalance().add(creditAmount));
-
-        if (creditAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Credit amount must be at least zero");
-        }
-        BigDecimal newBalance = wallet.getBalance().add(creditAmount);
-        wallet.setBalance(newBalance);
-        wallet.setLastUpdate(LocalDateTime.now());
-
+    protected Wallet saveWallet(Wallet wallet){
         return walletRepository.save(wallet);
-
     }
 
-    public Wallet getWalletByUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Users users = usersService.findByEmail(authentication.getName());
+    public ResponseWalletDto getByUser() {
+        Users currentUser = usersService.getLoggedUser();
+        return new ResponseWalletDto(walletRepository.findByUsers(currentUser).orElseThrow(EntityNotFoundException::new));
+    }
 
-        return walletRepository.findByUsers(users).orElseThrow(() -> new NoSuchElementException("Wallet not found for user"));
+    public ResponseWalletDto insertCredit(BigDecimal value) {
+        Users currentUser = usersService.getLoggedUser();
+        Wallet currentWallet = walletRepository.findByUsers(currentUser).orElseThrow(()->new EntityNotFoundException("user not found"));
+        if(value.compareTo(BigDecimal.ZERO) > 0)
+            currentWallet.setBalance(currentWallet.getBalance().add(value));
+        else
+            throw new NoSuchElementException("Invalid value: "+value);
+        log.info("Updating user credits: {}",currentWallet );
+        return new ResponseWalletDto(saveWallet(currentWallet));
+    }
+
+    public Wallet debit(WalletOperationDto walletDto) {
+        Wallet wallet = walletRepository.findByUsersEmail(walletDto.getUserEmail())
+                .orElseThrow(()->new EntityNotFoundException("user not found"));
+        if(wallet.getBalance().compareTo(walletDto.getPrice())>=0){
+            log.info("debiting wallet: {}", walletDto);
+            wallet.setBalance(wallet.getBalance().subtract(walletDto.getPrice()));
+            wallet.setPoints(wallet.getPoints()+calculatePoints(dateProvider.getCurrentDate().getDayOfWeek()));
+        }
+        else
+            throw new NoSuchElementException("Insuficient balance");
+        return walletRepository.save(wallet);
+    }
+
+    public Integer calculatePoints(DayOfWeek currentDay) {
+        Map<DayOfWeek,Integer> pointsMap = Map.of(DayOfWeek.SUNDAY,25,DayOfWeek.MONDAY,7
+                ,DayOfWeek.TUESDAY,6,DayOfWeek.WEDNESDAY,2,
+                DayOfWeek.THURSDAY,10,DayOfWeek.FRIDAY,15,DayOfWeek.SATURDAY,20);
+        log.info("Day of week:{} points: {}",currentDay,pointsMap.get(currentDay));
+        return pointsMap.get(currentDay);
     }
 }

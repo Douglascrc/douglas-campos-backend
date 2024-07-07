@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Setter
+@Getter
 @Table(name = "WALLET")
 public class Wallet {
 
@@ -39,9 +41,4 @@ public class Wallet {
     @JoinColumn( name = "user_id")
     private Users users;
 
-
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
-        this.lastUpdate = LocalDateTime.now();
-    }
 }
