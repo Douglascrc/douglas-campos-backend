@@ -1,7 +1,6 @@
-package br.com.sysmap.bootcamp.domain.services;
+package br.com.sysmap.bootcamp.domain.mapper;
 
 import br.com.sysmap.bootcamp.domain.mapper.AlbumMapper;
-import br.com.sysmap.bootcamp.domain.mapper.AlbumMapperImpl;
 import br.com.sysmap.bootcamp.domain.model.AlbumModel;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
