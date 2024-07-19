@@ -18,16 +18,21 @@ Run container docker:
 docker compose up
 ```
 ## API Endpoints for users
-The API provides the following endpoints for user services
+The API provides the following endpoints for users services
 ```
-Post /create receive username, password and email
+POST /create - receive username, password and email for create a user
 
-Post /auth
+POST /auth - Authenticated the user
 
-Put /update
+PUT /update - Update a user
 
-Get /users
+GET /users - List all users
 
-Get /id
+GET /id - Get user by id
 ```
+The API provides the following endpoints for Albums services
+```
+GET /all - List all albums
+
+POST / sale - post an album for sale
 
