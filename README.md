@@ -17,7 +17,7 @@ Run container docker:
 ```
 docker compose up
 ```
-## API Endpoints for users
+## API Endpoints 
 The API provides the following endpoints for users services
 ```
 POST /create - Receive username, password and email for create a user
