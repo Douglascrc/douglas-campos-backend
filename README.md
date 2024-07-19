@@ -20,7 +20,7 @@ docker compose up
 ## API Endpoints for users
 The API provides the following endpoints for users services
 ```
-POST /create - receive username, password and email for create a user
+POST /create - Receive username, password and email for create a user
 
 POST /auth - Authenticated the user
 
@@ -34,5 +34,9 @@ The API provides the following endpoints for Albums services
 ```
 GET /all - List all albums
 
-POST / sale - post an album for sale
+GET /my-collection - Get your albums 
+
+POST /sale - Post an album for sale
+
+Post /remove/id - Remove an album
 
