@@ -38,5 +38,5 @@ GET /my-collection - Get your albums
 
 POST /sale - Post an album for sale
 
-Post /remove/id - Remove an album
+POST /remove/id - Remove an album
 
