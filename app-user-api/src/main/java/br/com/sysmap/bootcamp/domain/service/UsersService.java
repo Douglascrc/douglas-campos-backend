@@ -41,8 +41,8 @@ public class UsersService implements UserDetailsService {
         if (usersOptional.isPresent()) {
             throw new NoSuchElementException("email already registered");
         }
-        Users userEntity = usersRepository.save(Users.builder().name(userDto.getEmail())
-                .password(passwordEncoder.encode(userDto.getPassword())).email(userDto.getEmail()).build());
+        Users userEntity = usersRepository.save(Users.builder().name(userDto.getName()).email((userDto.getEmail()))
+                .password(passwordEncoder.encode(userDto.getPassword())).build());
         log.info("Saving user: {}",userEntity );
         Wallet wallet = walletService.saveWallet(Wallet.builder().balance(BigDecimal.valueOf(100)).points(0L).users(userEntity).build());
         log.info("Creating wallet: {}",wallet);
