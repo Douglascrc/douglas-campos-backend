@@ -24,8 +24,4 @@ public class ResponseWalletDto {
         this.lastUpdate = wallet.getLastUpdate();
         this.user = new ResponseUserDto(wallet.getUsers());
     }
-
-    public ResponseWalletDto() {
-
-    }
 }
