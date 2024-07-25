@@ -37,7 +37,7 @@ public class AlbumController {
             @ApiResponse(responseCode = "401",description = "not authenticated user"),
             @ApiResponse(responseCode = "500",description = "internal failure to get albums")
     })
-    public ResponseEntity<Page<AlbumModel>> getAlbums(@RequestParam("search") String search, Pageable pg) throws IOException, ParseException, SpotifyWebApiException {
+    public ResponseEntity<Page<AlbumModel>> getAlbums(@RequestParam("searchText") String search, Pageable pg) throws IOException, ParseException, SpotifyWebApiException {
         return ResponseEntity.ok(this.albumService.getAlbums(search,pg));
     }
 

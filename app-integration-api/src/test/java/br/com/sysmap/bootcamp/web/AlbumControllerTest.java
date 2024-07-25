@@ -43,7 +43,7 @@ public class AlbumControllerTest{
         when(albumService.getAlbums(any(),any())).thenReturn(page);
 
         mockMvc.perform(get("/albums/all")
-                        .param("search", "test")
+                        .param("searchText", "test")
                         .param("page", String.valueOf(0))
                         .param("size", String.valueOf(10))
                         .contentType(MediaType.APPLICATION_JSON))
